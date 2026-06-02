@@ -1,4 +1,4 @@
-# ☕ CozyTracker (CampusCozy)
+# ☕ CozyTracker 
 
 A beautiful, responsive, and privacy-first student productivity dashboard designed to help you manage your academic and personal life all in one cozy place.
 
