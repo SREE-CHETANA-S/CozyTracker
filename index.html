@@ -625,7 +625,7 @@ function renderTimetable() {
       } else {
         bgColor = hexA(s.color, 0.1); borderColor = 'transparent';
         nameColor = s.color; timeColor = s.color;
-        titleTxt = isToday ? 'Click to mark attended' : 'Past/future slot';
+        titleTxt = 'Click to mark attended';
         pillClass = 'slot-pill miss';
       }
       pill.className = pillClass;
@@ -635,28 +635,23 @@ function renderTimetable() {
       const statusIcon = state === true ? ' ✓' : state === false ? ' ✗' : '';
       pill.innerHTML = `<span class="slot-sname" style="color:${nameColor}">${s.name}${statusIcon}</span><span class="slot-stime" style="color:${timeColor}">${sl.time}</span>`;
 
-      if (isToday) {
-        pill.onclick = () => {
-          const prev = todayAttendance[key];
-          if (prev === undefined || prev === null) {
-            todayAttendance[key] = true;
-            subjects[si].attended++;
-            subjects[si].total++;
-          } else if (prev === true) {
-            todayAttendance[key] = false;
-            subjects[si].attended = Math.max(0, subjects[si].attended - 1);
-          } else {
-            todayAttendance[key] = null;
-            subjects[si].total = Math.max(0, subjects[si].total - 1);
-          }
-          renderTimetable();
-          renderSubjAtt();
-          updateOverallAtt();
-        };
-      } else {
-        pill.style.cursor = 'default';
-        pill.title = 'Past/future — edit via subject attendance';
-      }
+      pill.onclick = () => {
+        const prev = todayAttendance[key];
+        if (prev === undefined || prev === null) {
+          todayAttendance[key] = true;
+          subjects[si].attended++;
+          subjects[si].total++;
+        } else if (prev === true) {
+          todayAttendance[key] = false;
+          subjects[si].attended = Math.max(0, subjects[si].attended - 1);
+        } else {
+          todayAttendance[key] = null;
+          subjects[si].total = Math.max(0, subjects[si].total - 1);
+        }
+        renderTimetable();
+        renderSubjAtt();
+        updateOverallAtt();
+      };
       wrap.appendChild(pill);
     });
     tdSlots.appendChild(wrap);
@@ -710,6 +705,7 @@ function renderSubjAtt() {
         <span class="sa-name">${s.name}</span>
         <div style="display:flex;align-items:center;gap:6px;">
           <span class="sa-pct" style="color:${ok?'var(--green)':'var(--amber)'}">${pct}%</span>
+          <button onclick="editSubjectAtt(${si})" title="Edit ${s.name} numbers" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:13px;padding:2px;transition:color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted2)'"><i class="ti ti-pencil"></i></button>
           <button onclick="deleteSubject(${si})" title="Remove ${s.name}" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:13px;padding:2px;transition:color 0.15s;" onmouseover="this.style.color='var(--rose)'" onmouseout="this.style.color='var(--muted2)'"><i class="ti ti-trash"></i></button>
         </div>
       </div>
@@ -717,6 +713,26 @@ function renderSubjAtt() {
       <div class="sa-meta">${s.attended} / ${s.total} classes attended</div>${hint}`;
     grid.appendChild(c);
   });
+}
+
+function editSubjectAtt(si) {
+  const s = subjects[si];
+  const newAtt = prompt(`Enter new ATTENDED classes for ${s.name} (currently ${s.attended}):`, s.attended);
+  if (newAtt === null) return;
+  const newTotal = prompt(`Enter new TOTAL classes for ${s.name} (currently ${s.total}):`, s.total);
+  if (newTotal === null) return;
+  
+  const attNum = parseInt(newAtt);
+  const totNum = parseInt(newTotal);
+  if (!isNaN(attNum) && !isNaN(totNum) && attNum >= 0 && totNum >= attNum) {
+    s.attended = attNum;
+    s.total = totNum;
+    renderTimetable();
+    renderSubjAtt();
+    updateOverallAtt();
+  } else {
+    alert("Invalid numbers! Make sure total is greater than or equal to attended, and both are numbers.");
+  }
 }
 
 function deleteSubject(si) {
